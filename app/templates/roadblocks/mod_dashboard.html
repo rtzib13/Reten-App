@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Moderation Dashboard</h2>
+
+{% for report in reports %}
+    <div>
+        <h3>{{ report.title }}</h3>
+        <p>{{ report.city }} | {{ report.status }} | Verified: {{ report.verified }}</p>
+
+        {% if not report.verified %}
+            <a href="{% url 'report-verify' report.id %}">Verify</a>
+        {% endif %}
+
+        {% if report.status != "RESOLVED" %}
+            | <a href="{% url 'report-resolve' report.id %}">Resolve</a>
+        {% endif %}
+    </div>
+    <hr>
+{% endfor %}
+
+{% endblock %}

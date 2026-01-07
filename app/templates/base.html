@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Roadblock Reporter</title>
+</head>
+<body>
+
+<nav>
+  {% if user.is_authenticated %}
+    Logged in as {{ user.username }} |
+    <a href="{% url 'report-list' %}">Home</a> |
+    <a href="{% url 'report-create' %}">New Report</a> |
+
+    <form method="post" action="{% url 'logout' %}" style="display:inline;">
+      {% csrf_token %}
+      <button type="submit" style="background:none;border:none;color:blue;cursor:pointer;text-decoration:underline;padding:0;">
+        Logout
+      </button>
+    </form>
+
+    {% if perms.roadblocks.can_verify_report %}
+      | <a href="{% url 'mod-dashboard' %}">Moderation</a>
+    {% endif %}
+  {% else %}
+    <a href="{% url 'login' %}">Login</a> |
+    <a href="{% url 'signup' %}">Sign Up</a>
+  {% endif %}
+</nav>
+
+
+<hr>
+
+{% block content %}
+{% endblock %}
+
+</body>
+</html>

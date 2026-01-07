@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Roadblock Reports</h2>
+
+<form method="get">
+    {{ filter_form.as_p }}
+    <button type="submit">Filter</button>
+</form>
+
+<hr>
+
+{% for report in reports %}
+    <div>
+        <h3>
+            <a href="{% url 'report-detail' report.id %}">
+                {{ report.title }}
+            </a>
+        </h3>
+        <p>{{ report.city }} | {{ report.severity }} | {{ report.status }}</p>
+        <p>Confirmed: {{ report.confirmations.count }}</p>
+    </div>
+    <hr>
+{% empty %}
+    <p>No reports found.</p>
+{% endfor %}
+
+{% endblock %}

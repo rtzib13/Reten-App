@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>{{ report.title }}</h2>
+
+<p><strong>Road:</strong> {{ report.road_name }}</p>
+<p><strong>City:</strong> {{ report.city }}</p>
+<p><strong>Description:</strong> {{ report.description }}</p>
+<p><strong>Status:</strong> {{ report.status }}</p>
+<p><strong>Verified:</strong> {{ report.verified }}</p>
+
+<p><strong>Confirmations:</strong> {{ confirmation_count }}</p>
+
+{% if not already_confirmed %}
+    <a href="{% url 'report-confirm' report.id %}">Confirm</a>
+{% else %}
+    <a href="{% url 'report-unconfirm' report.id %}">Unconfirm</a>
+{% endif %}
+
+<hr>
+
+{% if user == report.owner %}
+    <a href="{% url 'report-update' report.id %}">Edit</a> |
+    <a href="{% url 'report-delete' report.id %}">Delete</a>
+{% endif %}
+
+<hr>
+
+<h3>Comments</h3>
+
+{% for comment in report.comments.all %}
+    <p><strong>{{ comment.owner.username }}:</strong> {{ comment.text }}</p>
+{% empty %}
+    <p>No comments yet.</p>
+{% endfor %}
+
+<hr>
+
+<form method="post">
+    {% csrf_token %}
+    {{ comment_form.as_p }}
+    <button type="submit">Add Comment</button>
+</form>
+
+{% endblock %}
