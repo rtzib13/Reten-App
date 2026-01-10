@@ -6,6 +6,11 @@ from .views import (
     ReportUpdateView,
     ReportDeleteView,
     ModerationDashboardView,
+    edit_location,
+    delete_comment_view,
+    edit_contact_view,
+    send_verification_email_view,
+    verify_email_view,
 )
 
 urlpatterns = [
@@ -14,6 +19,13 @@ urlpatterns = [
 
     # Auth
     path("signup/", views.signup_view, name="signup"),
+    path("profile/location/", edit_location, name="edit-location"),
+
+    # profile settings
+    path("profile/contact/", edit_contact_view, name="edit-contact"),
+    path("profile/verify/send/", send_verification_email_view, name="send-verify-email"),
+    path("verify/<uuid:token>/", verify_email_view, name="verify-email"),
+
 
     # Report list (home page)
     path("", ReportListView.as_view(), name="report-list"),
@@ -23,6 +35,8 @@ urlpatterns = [
 
     # Report detail (view + comments)
     path("report/<int:pk>/", views.report_detail_view, name="report-detail"),
+    path("comments/<int:comment_id>/delete/", delete_comment_view, name="comment-delete"),
+
 
     # Update / delete (owner only)
     path("report/<int:pk>/edit/", ReportUpdateView.as_view(), name="report-update"),

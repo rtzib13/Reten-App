@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "rest_framework.authtoken",
-    "app",
+    "app.apps.AppConfig",
 ]
 
 
@@ -143,4 +143,8 @@ REST_FRAMEWORK = {
 LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "report-list"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = "no-reply@roadblocks.local"
+
 

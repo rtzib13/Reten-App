@@ -1,23 +1,93 @@
 import json
 
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
+from django.contrib import messages
+from django.conf import settings
+from django.core.mail import send_mail
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.db.models import Q
 
 from rest_framework.authtoken.models import Token
 
-from .models import RoadblockReport, RoadblockComment, RoadblockConfirmation
-from .forms import RoadblockReportForm, RoadblockCommentForm, RoadblockFilterForm
+from .models import RoadblockReport, RoadblockComment, RoadblockConfirmation, UserProfile, EmailVerificationToken
+from .forms import RoadblockReportForm, RoadblockCommentForm, RoadblockFilterForm, ProfileLocationForm, ProfileContactForm
 
 
 # ---------- TEMPLATE AUTH (LOCAL DJANGO) ----------
+@login_required
+def edit_location(request):
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+
+    if request.method == "POST":
+        form = ProfileLocationForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect("report-list")
+    else:
+        form = ProfileLocationForm(instance=profile)
+
+    return render(request, "roadblocks/edit_location.html", {"form": form})
+
+@login_required
+def edit_contact_view(request):
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+
+    if request.method == "POST":
+        form = ProfileContactForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Contact info saved.")
+            return redirect("edit-contact")
+    else:
+        form = ProfileContactForm(instance=profile)
+
+    return render(request, "roadblocks/edit_contact.html", {"form": form, "profile": profile})
+
+@login_required
+def send_verification_email_view(request):
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+
+    if not profile.email:
+        return redirect("edit-contact")
+
+    token_obj, _ = EmailVerificationToken.objects.get_or_create(user=request.user)
+
+    verify_url = request.build_absolute_uri(
+        reverse_lazy("verify-email", kwargs={"token": str(token_obj.token)})
+    )
+
+    send_mail(
+        subject="Verify your Roadblocks account",
+        message=f"Click this link to verify your account:\n\n{verify_url}\n\nThis link expires in 24 hours.",
+        from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
+        recipient_list=[profile.email],
+        fail_silently=False,
+    )
+
+    return redirect("edit-contact")
+
+def verify_email_view(request, token):
+    token_obj = get_object_or_404(EmailVerificationToken, token=token)
+
+    if token_obj.is_expired():
+        return HttpResponseBadRequest("Verification link expired. Please request a new one.")
+
+    profile, _ = UserProfile.objects.get_or_create(user=token_obj.user)
+    profile.is_verified = True
+    profile.save()
+
+    token_obj.delete()  # one-time use
+
+    return render(request, "roadblocks/verify_success.html")
+
 def signup_view(request):
     if request.method == "POST":
         form = UserCreationForm(request.POST)
@@ -97,6 +167,14 @@ class ReportListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         qs = RoadblockReport.objects.all().order_by("-created_at")
 
+        # --- Location filter: only show reports in my state ---
+        profile = getattr(self.request.user, "profile", None)
+
+        if not profile or not profile.state:
+            return RoadblockReport.objects.none()
+
+        qs = qs.filter(state__iexact=profile.state)
+
         form = RoadblockFilterForm(self.request.GET)
         if form.is_valid():
             city = form.cleaned_data.get("city", "").strip()
@@ -104,6 +182,7 @@ class ReportListView(LoginRequiredMixin, ListView):
             status = form.cleaned_data.get("status", "")
             verified_only = form.cleaned_data.get("verified_only", False)
 
+            # NOTE: this city filter narrows within the user's state
             if city:
                 qs = qs.filter(city__icontains=city)
             if severity:
@@ -111,13 +190,18 @@ class ReportListView(LoginRequiredMixin, ListView):
             if status:
                 qs = qs.filter(status=status)
             if verified_only:
-                qs = qs.filter(verified=True)
+                qs = qs.filter(Q(verified=True) | Q(owner__profile__is_verified=True))
 
         return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["filter_form"] = RoadblockFilterForm(self.request.GET)
+
+        # handy flag so you can show a message in template
+        profile = getattr(self.request.user, "profile", None)
+        ctx["needs_location"] = (not profile or not profile.state)
+
         return ctx
 
 
@@ -155,10 +239,30 @@ def report_detail_view(request, pk):
         },
     )
 
+@login_required
+@require_POST
+def delete_comment_view(request, comment_id):
+    comment = get_object_or_404(RoadblockComment, pk=comment_id)
+
+    # Only the owner of the comment can delete it
+    if comment.owner_id != request.user.id:
+        return HttpResponseForbidden("You can only delete your own comment.")
+
+    report_id = comment.report_id
+    comment.delete()
+    return redirect("report-detail", pk=report_id)
+
 
 @login_required
 def confirm_report_view(request, pk):
     report = get_object_or_404(RoadblockReport, pk=pk)
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    if not profile.is_verified:
+        return HttpResponseForbidden("You must verify your account before confirming reports.")
+
+    if report.owner_id == request.user.id:
+        return HttpResponseForbidden("You cannot confirm your own report.")
+    
     RoadblockConfirmation.objects.get_or_create(
         report=report,
         user=request.user,

@@ -3,6 +3,13 @@
 
 <h2>Roadblock Reports</h2>
 
+{% if needs_location %}
+  <p style="background:#fff3cd; padding:10px; border:1px solid #ffeeba;">
+    You need to set your location to see nearby roadblocks.
+    <a href="{% url 'edit-location' %}">Update location</a>
+  </p>
+{% endif %}
+
 <form method="get">
     {{ filter_form.as_p }}
     <button type="submit">Filter</button>
@@ -17,7 +24,17 @@
                 {{ report.title }}
             </a>
         </h3>
+
         <p>{{ report.city }} | {{ report.severity }} | {{ report.status }}</p>
+
+        {% if report.verified %}
+          <p>✅ Admin Verified</p>
+        {% elif report.owner.profile.is_verified %}
+          <p>✅ Verified Account</p>
+        {% else %}
+          <p>⚠️ Unverified</p>
+        {% endif %}
+
         <p>Confirmed: {{ report.confirmations.count }}</p>
     </div>
     <hr>

@@ -7,21 +7,20 @@
 <p><strong>City:</strong> {{ report.city }}</p>
 <p><strong>Description:</strong> {{ report.description }}</p>
 <p><strong>Status:</strong> {{ report.status }}</p>
-<p><strong>Verified:</strong> {{ report.verified }}</p>
+<p><strong>Report Verified:</strong> {{ report.verified }}</p>
+<p><strong>Account Verified:</strong> {{ user.profile.is_verified }}</p>
+
 
 <p><strong>Confirmations:</strong> {{ confirmation_count }}</p>
 
-{% if not already_confirmed %}
-    <a href="{% url 'report-confirm' report.id %}">Confirm</a>
+{% if report.owner != user %}
+    {% if not already_confirmed %}
+        <a href="{% url 'report-confirm' report.id %}">Confirm</a>
+    {% else %}
+        <a href="{% url 'report-unconfirm' report.id %}">Unconfirm</a>
+    {% endif %}
 {% else %}
-    <a href="{% url 'report-unconfirm' report.id %}">Unconfirm</a>
-{% endif %}
-
-<hr>
-
-{% if user == report.owner %}
-    <a href="{% url 'report-update' report.id %}">Edit</a> |
-    <a href="{% url 'report-delete' report.id %}">Delete</a>
+    <p>You cannot confirm your own report.</p>
 {% endif %}
 
 <hr>
@@ -29,10 +28,22 @@
 <h3>Comments</h3>
 
 {% for comment in report.comments.all %}
-    <p><strong>{{ comment.owner.username }}:</strong> {{ comment.text }}</p>
+  <div style="margin-bottom: 10px;">
+    <p>
+      <strong>{{ comment.owner.username }}:</strong> {{ comment.text }}
+    </p>
+
+    {% if comment.owner == user %}
+      <form method="post" action="{% url 'comment-delete' comment.id %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit">Delete</button>
+      </form>
+    {% endif %}
+  </div>
 {% empty %}
-    <p>No comments yet.</p>
+  <p>No comments yet.</p>
 {% endfor %}
+
 
 <hr>
 

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Profile</h2>
+
+<p>Verified: {{ profile.is_verified }}</p>
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Save</button>
+</form>
+
+<hr>
+
+{% if profile.email %}
+  <a href="{% url 'send-verify-email' %}">Send verification email</a>
+{% else %}
+  <p>Add an email address to verify your account.</p>
+{% endif %}
+
+{% endblock %}
