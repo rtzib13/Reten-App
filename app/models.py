@@ -20,8 +20,11 @@ class RoadblockReport(models.Model):
     title = models.CharField(max_length=80)
     description = models.TextField()
     road_name = models.CharField(max_length=120)
+    nearby_place = models.CharField(max_length=120, blank=True)
     city = models.CharField(max_length=80)
     state = models.CharField(max_length=2, null=True, blank=True)
+
+
 
 
     severity = models.CharField(max_length=4, choices=SEVERITY_CHOICES, default="LOW")
@@ -32,6 +35,7 @@ class RoadblockReport(models.Model):
 
     class Meta:
         permissions = [
+            ("can_view_moderation", "Can view moderation dashboard"),
             ("can_verify_report", "Can verify roadblock reports"),
             ("can_resolve_report", "Can resolve roadblock reports"),
         ]

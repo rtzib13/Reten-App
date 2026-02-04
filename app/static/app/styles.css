@@ -1,0 +1,411 @@
+/* ---------- Base ---------- */
+:root{
+  --navh: 60px;          /* tweak this if needed */
+  --gold: #facc15;
+  --deepblue: #0b1d39;
+  --royal: #1e3a8a;
+}
+
+* { box-sizing: border-box; }
+body{
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background:#b5d7fa;
+  color: var(--text);
+}
+
+a{
+  color: var(--blue);
+  text-decoration: none;
+}
+a:hover{ text-decoration: underline; }
+
+.container{
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 18px;
+}
+
+/* ---------- Nav ---------- */
+.nav{
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+.nav-inner{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 18px;
+  max-width: 980px;
+  margin: 0 auto;
+}
+.nav-left{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.brand{
+  font-weight: 800;
+  color: var(--text);
+  margin-right: 12px;
+}
+.nav-links{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.nav-pill{
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #fff;
+}
+.nav-pill:hover{
+  background: #f9fafb;
+  text-decoration: none;
+}
+.nav-right{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.user-chip{
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ---------- Headings ---------- */
+h1,h2,h3{ margin: 0 0 12px; }
+.page-title{
+  font-size: 28px;
+  margin: 10px 0 16px;
+}
+
+/* ---------- Cards ---------- */
+.card{
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 14px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.card:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.06);
+}
+
+.stack{ display: grid; gap: 12px; }
+
+/* ---------- Report row card ---------- */
+.report-title{
+  font-size: 18px;
+  font-weight: 750;
+  margin-bottom: 6px;
+}
+.row{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.meta{
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ---------- Badges ---------- */
+.badge{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+
+.badge-high{ border-color: rgba(220,38,38,.25); color: var(--red); background: rgba(220,38,38,.06); }
+.badge-med{  border-color: rgba(245,158,11,.35); color: #b45309; background: rgba(245,158,11,.10); }
+.badge-low{  border-color: rgba(22,163,74,.25); color: var(--green); background: rgba(22,163,74,.08); }
+
+.badge-active{ border-color: rgba(37,99,235,.25); color: var(--blue); background: rgba(37,99,235,.06); }
+.badge-resolved{ border-color: rgba(100,116,139,.35); color: var(--slate); background: rgba(100,116,139,.10); }
+
+.badge-admin{ border-color: rgba(22,163,74,.25); color: var(--green); background: rgba(22,163,74,.08); }
+.badge-acc{ border-color: rgba(37,99,235,.25); color: var(--blue); background: rgba(37,99,235,.06); }
+.badge-unv{ border-color: rgba(245,158,11,.35); color: #b45309; background: rgba(245,158,11,.10); }
+
+/* ---------- Forms ---------- */
+.form-card{ margin-bottom: 14px; }
+/* Inputs ONLY inside cards or auth pages */
+.card input,
+.card select,
+.card textarea,
+.auth-card input,
+.auth-card select,
+.auth-card textarea{
+  width: 100%;
+  padding: 10px 10px;
+  border: 1px solid var(--border);
+  border-color: #13181e;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 14px;
+  box-shadow: 0 1px 0 rgba(0,0,0,.03);
+}
+
+textarea{ min-height: 90px; }
+
+button{
+  border: 1px solid var(--border);
+  background: #111827;
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+button:hover{ opacity: .92; }
+
+a.btn,
+a.btn:visited{
+  border: 1px solid var(--border);
+  background: #111827;
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+
+  display: inline-block;
+  line-height: 1;          
+  vertical-align: middle; 
+
+  text-decoration: none;
+}
+
+a.btn:hover{
+  opacity: .92;
+  text-decoration: none;
+}
+
+
+.btn-link{
+  background: transparent;
+  color: var(--blue);
+  border: none;
+  padding: 0;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-link:hover{ text-decoration: underline; }
+
+.btn-danger,
+button.btn-danger{
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  background: #b91c1c;
+  color: #fff;
+}
+.btn-danger:hover{ opacity: .92; }
+
+.danger-zone{
+  padding: 12px;
+  border-radius: 10px;
+  background: #fff1f2;
+  border: 1px solid #fecaca;
+}
+
+/* --- Form spacing --- */
+.card.form-card p { 
+  margin: 0 0 12px;
+}
+
+/* --- Checkbox polish --- */
+.card.form-card input[type="checkbox"]{
+  width: auto;
+  transform: translateY(1px);
+}
+
+.card.form-card label{
+  font-weight: 600;
+}
+
+.card.form-card p:has(input[type="checkbox"]){
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---------- Small helpers ---------- */
+.hr{ height: 1px; background: var(--border); margin: 16px 0; }
+.notice{
+  background: rgba(245,158,11,.12);
+  border: 1px solid rgba(245,158,11,.25);
+  color: #92400e;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+/* ---------- Auth Pages (Login / Signup) ---------- */
+/* Wrap area under nav */
+.auth-wrap{
+  min-height: calc(100vh - var(--navh));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 16px;
+  background: linear-gradient(135deg, var(--deepblue), var(--royal));
+  border-radius: 14px; /* keeps it looking nice inside container */
+}
+
+/* White centered card */
+.auth-card{
+  width: 100%;
+  max-width: 520px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 44px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0,0,0,.25);
+  border: 1px solid rgba(255,255,255,.15);
+}
+
+/* Big title */
+.auth-title{
+  margin: 0 0 6px;
+  font-size: 2.8rem;
+  font-weight: 900;
+  letter-spacing: .5px;
+  color: var(--royal);
+}
+
+/* Subtitle */
+.auth-subtitle{
+  margin: 0 0 26px;
+  color: var(--muted);
+  font-size: .95rem;
+}
+
+/* Form layout */
+.auth-form{
+  text-align: left;
+}
+
+.auth-form .form-group{
+  margin-bottom: 16px;
+}
+
+.auth-form label{
+  display: block;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+/* Inputs ONLY inside auth card (so it doesn’t affect other pages) */
+.auth-card input{
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #fff;
+  font-size: 14px;
+}
+
+.auth-card input:focus{
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(250, 204, 21, .25);
+}
+
+/* Gold login button (does NOT change your normal button style elsewhere) */
+.auth-card .btn-primary{
+  width: 100%;
+  margin-top: 10px;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-weight: 800;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--gold), #fbbf24);
+  color: var(--deepblue);
+}
+
+.auth-card .btn-primary:hover{
+  opacity: .95;
+}
+
+/* Footer text */
+.auth-foot{
+  margin-top: 14px;
+  text-align: center;
+  color: var(--muted);
+  font-size: .92rem;
+}
+
+.auth-link{
+  color: var(--royal);
+  font-weight: 800;
+  text-decoration: none;
+}
+.auth-link:hover{ text-decoration: underline; }
+
+.field-error{
+  color: var(--red);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.field-help{
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.field-help ul{
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.field-help li{
+  margin-bottom: 4px;
+}
+
+/* ---------- Filter Form: don't stretch inputs ---------- */
+.filter-form input,
+.filter-form select {
+  width: 280px;     /* pick a size you like */
+  max-width: 100%;
+}
+
+.filter-form p {
+  margin: 0 0 12px;
+}
+
+.filter-form button {
+  width: auto;      /* keep button normal size */
+}
+
+/* ---------- Filter form borders ---------- */
+.filter-form input,
+.filter-form select {
+  border: 1px solid #cbd5e1; /* darker than --border */
+  background: #fff;
+}
+
+/* FORCE visible borders on inputs everywhere */
+input, select, textarea {
+  border: 1px solid #94a3b8 !important;   /* darker, always visible */
+  background: #ffffff !important;
+}
+

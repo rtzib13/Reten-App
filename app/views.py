@@ -1,12 +1,13 @@
 import json
 
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
 from django.contrib import messages
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
@@ -100,6 +101,18 @@ def signup_view(request):
 
     return render(request, "registration/signup.html", {"form": form})
 
+@login_required
+def delete_account_confirm(request):
+    if request.user.is_staff or request.user.is_superuser:
+        raise PermissionDenied
+    if request.method == "POST":
+        user = request.user
+        logout(request)         
+        user.delete()            # permanently delete user
+        return redirect("login") # or redirect("report-list") if you want
+
+    return render(request, "profile/delete_account_confirm.html")
+
 
 # ---------- API AUTH (GITHUB PAGES SAFE) ----------
 @csrf_exempt
@@ -166,23 +179,23 @@ class ReportListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         qs = RoadblockReport.objects.all().order_by("-created_at")
+        user = self.request.user
 
-        # --- Location filter: only show reports in my state ---
-        profile = getattr(self.request.user, "profile", None)
+        # ✅ Non-admins are limited to their state
+        if not (user.is_staff or user.is_superuser):
+            profile = getattr(user, "profile", None)
+            if not profile or not profile.state:
+                return RoadblockReport.objects.none()
+            qs = qs.filter(state__iexact=profile.state)
 
-        if not profile or not profile.state:
-            return RoadblockReport.objects.none()
-
-        qs = qs.filter(state__iexact=profile.state)
-
+        # ✅ Now apply the filter form (admins + users)
         form = RoadblockFilterForm(self.request.GET)
         if form.is_valid():
-            city = form.cleaned_data.get("city", "").strip()
-            severity = form.cleaned_data.get("severity", "")
-            status = form.cleaned_data.get("status", "")
-            verified_only = form.cleaned_data.get("verified_only", False)
+            city = (form.cleaned_data.get("city") or "").strip()
+            severity = form.cleaned_data.get("severity") or ""
+            status = form.cleaned_data.get("status") or ""
+            verified_only = form.cleaned_data.get("verified_only") or False
 
-            # NOTE: this city filter narrows within the user's state
             if city:
                 qs = qs.filter(city__icontains=city)
             if severity:
@@ -192,15 +205,30 @@ class ReportListView(LoginRequiredMixin, ListView):
             if verified_only:
                 qs = qs.filter(Q(verified=True) | Q(owner__profile__is_verified=True))
 
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return qs
         return qs
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["filter_form"] = RoadblockFilterForm(self.request.GET)
 
-        # handy flag so you can show a message in template
         profile = getattr(self.request.user, "profile", None)
         ctx["needs_location"] = (not profile or not profile.state)
+
+        # ✅ STATS BAR 
+        if profile and profile.state:
+            base_qs = RoadblockReport.objects.filter(state__iexact=profile.state)
+
+            ctx["stats"] = {
+                "total": base_qs.count(),
+                "active": base_qs.filter(status="ACTIVE").count(),
+                "resolved": base_qs.filter(status="RESOLVED").count(),
+                "trusted": base_qs.filter(Q(verified=True) | Q(owner__profile__is_verified=True)).count(),
+            }
+        else:
+            # if user has no location yet, show zeros
+            ctx["stats"] = {"total": 0, "active": 0, "resolved": 0, "trusted": 0}
 
         return ctx
 
@@ -307,7 +335,7 @@ class ReportDeleteView(LoginRequiredMixin, OwnerOnlyMixin, DeleteView):
 
 # ---------- MODERATION ----------
 class ModerationDashboardView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
-    permission_required = "roadblocks.can_verify_report"
+    permission_required = "roadblocks.can_view_moderation"
     model = RoadblockReport
     template_name = "roadblocks/mod_dashboard.html"
     context_object_name = "reports"
@@ -335,4 +363,24 @@ def resolve_report_view(request, pk):
 
     report.status = "RESOLVED"
     report.save()
+    return redirect("mod-dashboard")
+
+# ✅ NEW: MODERATION EDIT (admin can edit any report)
+class ModerationReportUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    permission_required = "app.change_roadblockreport"
+    model = RoadblockReport
+    form_class = RoadblockReportForm
+    template_name = "roadblocks/mod_edit_report.html"
+
+    def get_success_url(self):
+        return reverse_lazy("mod-dashboard")
+
+
+# ✅ NEW: MODERATION DELETE (admin can delete any report)
+@require_POST
+@login_required
+@permission_required("app.delete_roadblockreport", raise_exception=True)
+def delete_report_view(request, pk):
+    report = get_object_or_404(RoadblockReport, pk=pk)
+    report.delete()
     return redirect("mod-dashboard")

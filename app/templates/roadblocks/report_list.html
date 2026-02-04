@@ -1,45 +1,72 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>Roadblock Reports</h2>
+<h2 class="page-title">Roadblock Reports</h2>
+
+<div class="row" style="margin: 10px 0 18px;">
+  <span class="badge badge-active">Active: {{ stats.active }}</span>
+  <span class="badge badge-resolved">Resolved: {{ stats.resolved }}</span>
+  <span class="badge badge-acc">Trusted: {{ stats.trusted }}</span>
+  <span class="badge">Total: {{ stats.total }}</span>
+</div>
 
 {% if needs_location %}
-  <p style="background:#fff3cd; padding:10px; border:1px solid #ffeeba;">
+  <div class="notice">
     You need to set your location to see nearby roadblocks.
     <a href="{% url 'edit-location' %}">Update location</a>
-  </p>
+  </div>
 {% endif %}
 
-<form method="get">
+<div class="card form-card">
+  <form method="get" class="filter-form">
     {{ filter_form.as_p }}
     <button type="submit">Filter</button>
-</form>
+  </form>
+</div>
 
-<hr>
+<div class="stack">
+  {% for report in reports %}
+    <div class="card">
+      <div class="report-title">
+        <a href="{% url 'report-detail' report.id %}">{{ report.title }}</a>
+      </div>
 
-{% for report in reports %}
-    <div>
-        <h3>
-            <a href="{% url 'report-detail' report.id %}">
-                {{ report.title }}
-            </a>
-        </h3>
+      <div class="row">
+        <span class="badge badge-{{ report.severity|lower }}">
+          {{ report.get_severity_display }}
+        </span>
 
-        <p>{{ report.city }} | {{ report.severity }} | {{ report.status }}</p>
+        <span class="badge {% if report.status == 'ACTIVE' %}badge-active{% else %}badge-resolved{% endif %}">
+          {{ report.status }}
+        </span>
+
+        <span class="meta">📍 {{ report.city }}, {{ report.state }}</span>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <span class="meta">🕒 {{ report.created_at|date:"M d, Y · g:i A" }}</span>
 
         {% if report.verified %}
-          <p>✅ Admin Verified</p>
+          <span class="badge badge-admin">✅ Admin Verified</span>
         {% elif report.owner.profile.is_verified %}
-          <p>✅ Verified Account</p>
+          <span class="badge badge-acc">✅ Verified Account</span>
         {% else %}
-          <p>⚠️ Unverified</p>
+          <span class="badge badge-unv">⚠️ Unverified</span>
         {% endif %}
 
-        <p>Confirmed: {{ report.confirmations.count }}</p>
+        <span class="meta">👍 {{ report.confirmations.count }} confirmations</span>
+
+        <a class="nav-pill" target="_blank"
+            href="https://www.google.com/maps/search/?api=1&query={{ report.road_name|urlencode }}+{% if report.nearby_place %}near+{{ report.nearby_place|urlencode }}+{% endif %}{{ report.city|urlencode }}+{{ report.state|urlencode }}">
+          View map
+        </a>
+      </div>
     </div>
-    <hr>
-{% empty %}
-    <p>No reports found.</p>
-{% endfor %}
+  {% empty %}
+    <div class="card">
+      <p class="meta">No reports found.</p>
+    </div>
+  {% endfor %}
+</div>
 
 {% endblock %}

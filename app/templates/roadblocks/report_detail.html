@@ -1,56 +1,105 @@
 {% extends "base.html" %}
+{% load tz %}
 {% block content %}
 
-<h2>{{ report.title }}</h2>
+<div class="card">
+  <h2 class="page-title" style="margin-bottom:6px;">{{ report.title }}</h2>
 
-<p><strong>Road:</strong> {{ report.road_name }}</p>
-<p><strong>City:</strong> {{ report.city }}</p>
-<p><strong>Description:</strong> {{ report.description }}</p>
-<p><strong>Status:</strong> {{ report.status }}</p>
-<p><strong>Report Verified:</strong> {{ report.verified }}</p>
-<p><strong>Account Verified:</strong> {{ user.profile.is_verified }}</p>
+  <div class="row" style="margin-bottom:10px;">
+    <span class="meta">🕒 {{ report.created_at|localtime|timesince }} ago ({{ report.created_at|localtime|date:"g:i A" }})</span>
 
+    <span class="badge badge-{{ report.severity|lower }}">
+      {{ report.get_severity_display }}
+    </span>
 
-<p><strong>Confirmations:</strong> {{ confirmation_count }}</p>
+    <span class="badge {% if report.status == 'ACTIVE' %}badge-active{% else %}badge-resolved{% endif %}">
+      {{ report.status }}
+    </span>
 
-{% if report.owner != user %}
-    {% if not already_confirmed %}
-        <a href="{% url 'report-confirm' report.id %}">Confirm</a>
+    {% if report.verified %}
+      <span class="badge badge-admin">✅ Admin Verified</span>
+    {% elif report.owner.profile.is_verified %}
+      <span class="badge badge-acc">✅ Verified Account</span>
     {% else %}
-        <a href="{% url 'report-unconfirm' report.id %}">Unconfirm</a>
-    {% endif %}
-{% else %}
-    <p>You cannot confirm your own report.</p>
-{% endif %}
-
-<hr>
-
-<h3>Comments</h3>
-
-{% for comment in report.comments.all %}
-  <div style="margin-bottom: 10px;">
-    <p>
-      <strong>{{ comment.owner.username }}:</strong> {{ comment.text }}
-    </p>
-
-    {% if comment.owner == user %}
-      <form method="post" action="{% url 'comment-delete' comment.id %}" style="display:inline;">
-        {% csrf_token %}
-        <button type="submit">Delete</button>
-      </form>
+      <span class="badge badge-unv">⚠️ Unverified</span>
     {% endif %}
   </div>
-{% empty %}
-  <p>No comments yet.</p>
-{% endfor %}
 
+  <div class="row" style="margin-bottom:6px;">
+    <span class="meta">📍 {{ report.city }}, {{ report.state }}</span>
+    <span class="meta">🛣 {{ report.road_name }}</span>
 
-<hr>
+    {% if report.nearby_place %}
+    <span class="meta">📌 Near: {{ report.nearby_place }}</span>
+  {% endif %}
+  </div>
 
-<form method="post">
+  <div class="hr"></div>
+
+  <p style="margin:0 0 12px;">
+    <strong>Description:</strong><br>
+    {{ report.description }}
+  </p>
+
+  <div class="row" style="justify-content: space-between;">
+    <span class="meta">👍 {{ confirmation_count }} confirmations</span>
+
+    {% if report.owner != user %}
+      {% if not already_confirmed %}
+        <a class="nav-pill" href="{% url 'report-confirm' report.id %}">Confirm</a>
+      {% else %}
+        <a class="nav-pill" href="{% url 'report-unconfirm' report.id %}">Unconfirm</a>
+      {% endif %}
+    {% else %}
+      <span class="meta">You can’t confirm your own report.</span>
+    {% endif %}
+  </div>
+
+  {% if user == report.owner %}
+    <div class="row" style="margin-top:12px;">
+      <a class="nav-pill" href="{% url 'report-update' report.id %}">Edit</a>
+      <a class="nav-pill" href="{% url 'report-delete' report.id %}">Delete</a>
+    </div>
+  {% endif %}
+</div>
+
+<div style="height:14px;"></div>
+
+<div class="card">
+  <h3 style="margin-bottom:12px;">Comments</h3>
+
+  <div class="stack">
+    {% for comment in report.comments.all %}
+      <div class="card" style="box-shadow:none;">
+        <div class="row" style="justify-content: space-between;">
+          <div>
+            <strong>{{ comment.owner.username }}</strong>
+            <span class="meta">· {{ comment.created_at|localtime|date:"M d, Y · g:i A" }}</span>
+          </div>
+
+          {% if comment.owner == user %}
+            <form method="post" action="{% url 'comment-delete' comment.id %}">
+              {% csrf_token %}
+              <button type="submit">Delete</button>
+            </form>
+          {% endif %}
+        </div>
+
+        <p style="margin:10px 0 0;">{{ comment.text }}</p>
+      </div>
+    {% empty %}
+      <p class="meta">No comments yet.</p>
+    {% endfor %}
+  </div>
+
+  <div class="hr"></div>
+
+  <h3 style="margin-bottom:10px;">Add a comment</h3>
+  <form method="post">
     {% csrf_token %}
     {{ comment_form.as_p }}
     <button type="submit">Add Comment</button>
-</form>
+  </form>
+</div>
 
 {% endblock %}

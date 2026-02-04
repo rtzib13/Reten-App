@@ -9,8 +9,22 @@
   {{ form.as_p }}
   <button type="submit">Save</button>
 </form>
+<hr style="margin: 18px 0;">
 
-<hr>
+{% if not user.is_staff and not user.is_superuser %}
+  <div class="danger-zone">
+    <h3 style="margin-bottom:8px;">Danger Zone</h3>
+    <p style="margin-top:0; opacity:.8;">
+      This will permanently delete your account and cannot be undone.
+    </p>
+
+    <a class="btn btn-danger" href="{% url 'delete-account' %}">
+      Delete Account
+    </a>
+  </div>
+
+  <hr>
+{% endif %}
 
 {% if profile.email %}
   <a href="{% url 'send-verify-email' %}">Send verification email</a>

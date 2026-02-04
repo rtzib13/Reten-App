@@ -1,40 +1,57 @@
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Roadblock Reporter</title>
+  <title>Roadblock Reporter</title>
+  <link rel="stylesheet" href="{% static 'app/styles.css' %}?v=5">
 </head>
 <body>
 
-<nav>
-  {% if user.is_authenticated %}
-    Logged in as {{ user.username }} |
-    <a href="{% url 'report-list' %}">Home</a> |
-    <a href="{% url 'report-create' %}">New Report</a> |
-    <a href="{% url 'edit-contact' %}">Profile</a> |
-    <a href="{% url 'edit-location' %}">Update Location</a> |
+  <div class="nav">
+    <div class="nav-inner">
+      <div class="nav-left">
 
-    <form method="post" action="{% url 'logout' %}" style="display:inline;">
-      {% csrf_token %}
-      <button type="submit" style="background:none;border:none;color:blue;cursor:pointer;text-decoration:underline;padding:0;">
-        Logout
-      </button>
-    </form>
+        {% if user.is_authenticated %}
+        <a class="brand" href="{% url 'report-list' %}">Roadblock Reporter</a>
+          <div class="nav-links">
+            <a class="nav-pill" href="{% url 'report-list' %}">Home</a>
+            <a class="nav-pill" href="{% url 'report-create' %}">New Report</a>
+            <a class="nav-pill" href="{% url 'edit-contact' %}">Profile</a>
+            
+            {% if not user.is_staff and not user.is_superuser %}
+                <a class="nav-pill" href="{% url 'edit-location' %}">Location</a>
+            {% endif %}
 
-    {% if perms.roadblocks.can_verify_report %}
-      | <a href="{% url 'mod-dashboard' %}">Moderation</a>
-    {% endif %}
-
-  {% else %}
-    <a href="{% url 'login' %}">Login</a> |
-    <a href="{% url 'signup' %}">Sign Up</a>
-  {% endif %}
-</nav>
+            {% if perms.app.can_view_moderation %}
+                <a class="nav-pill" href="{% url 'mod-dashboard' %}">Moderation</a>
+            {% endif %}
 
 
-<hr>
+          </div>
+        {% endif %}
+      </div>
 
-{% block content %}
-{% endblock %}
+      <div class="nav-right">
+        {% if user.is_authenticated %}
+            <span class="user-chip">Logged in as {{ user.username }}</span>
+            <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit">Logout</button>
+            </form>
+        {% else %}
+            {% if request.resolver_match.url_name != "login" and request.resolver_match.url_name != "signup" %}
+            <a class="nav-pill" href="{% url 'login' %}">Login</a>
+            <a class="nav-pill" href="{% url 'signup' %}">Sign Up</a>
+            {% endif %}
+        {% endif %}
+        </div>
+    </div>
+  </div>
+
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
 
 </body>
 </html>
+

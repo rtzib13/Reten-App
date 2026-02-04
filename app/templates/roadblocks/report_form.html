@@ -1,12 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>Report</h2>
+<h2 class="page-title">New Report</h2>
 
-<form method="post">
+<div class="card form-card">
+  <p class="meta">
+    Fill out the details below. Be as specific as possible so others can confirm quickly.
+  </p>
+
+  <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Save</button>
-</form>
+    <button type="submit">Create Report</button>
+  </form>
+</div>
 
 {% endblock %}
+

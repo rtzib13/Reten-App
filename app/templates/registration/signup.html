@@ -1,12 +1,48 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h2>Sign Up</h2>
+<div class="auth-wrap">
+  <div class="auth-card">
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Create Account</button>
-</form>
+    <h1 class="auth-title">Roadblock Reporter</h1>
+    <p class="auth-subtitle">Create your account</p>
+
+    <form method="post" class="auth-form">
+      {% csrf_token %}
+
+        {% for field in form %}
+        <div class="form-group">
+            <label for="{{ field.id_for_label }}">
+            {{ field.label }}
+            </label>
+
+            {{ field }}
+
+            {% if field.help_text %}
+            <div class="field-help">
+                {{ field.help_text|safe }}
+            </div>
+            {% endif %}
+
+            {% if field.errors %}
+            <div class="field-error">
+                {{ field.errors }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+
+      <button type="submit" class="btn-primary">Create Account</button>
+
+      <p class="auth-foot">
+        Already have an account?
+        <a class="auth-link" href="{% url 'login' %}">Log in</a>
+      </p>
+
+    </form>
+
+  </div>
+</div>
 
 {% endblock %}
